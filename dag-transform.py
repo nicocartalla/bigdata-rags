@@ -20,15 +20,27 @@ logger = logging.getLogger(__name__)
 # Parámetros generales
 bucket_name = "datalake"
 source = "mysql"
-tables = ["big_chance_team", "clean_sheet_team", "effective_clearance_team",
-                  "expected_goals_team", "ontarget_scoring_att_team",
-                  "penalty_won_team", "possession_won_att",
-                  "team_goals_per_match", "touches_in_opp_box_team",
-                  "player_expected_assists",
-                  "expected_goals_conceded_team", "goals_conceded_team_match",
-                  "interception_team", "penalty_conceded_team", "saves_team",
-                  "won_tackle_team", "fk_foul_lost_team", "interception_team",
-                  "total_yel_card_team"]
+tables = [
+    "big_chance_team",
+    "clean_sheet_team",
+    "effective_clearance_team",
+    "expected_goals_team",
+    "ontarget_scoring_att_team",
+    "penalty_won_team",
+    "possession_won_att",
+    "team_goals_per_match",
+    "touches_in_opp_box_team",
+    "player_expected_assists",
+    "expected_goals_conceded_team",
+    "goals_conceded_team_match",
+    "interception_team",
+    "penalty_conceded_team",
+    "saves_team",
+    "won_tackle_team",
+    "fk_foul_lost_team",
+    "interception_team",
+    "total_yel_card_team",
+]
 current_date = datetime.now()
 year = current_date.strftime("%Y")
 month = current_date.strftime("%m")
@@ -36,9 +48,8 @@ day = current_date.strftime("%d")
 
 
 def create_spark_session(app_name: str) -> SparkSession:
-    return SparkSession.builder \
-        .appName(app_name) \
-        .getOrCreate()
+    return SparkSession.builder.appName(app_name).getOrCreate()
+
 
 # Función para verificar que todos los archivos de estado sean `_SUCCESS`
 def verify_all_success():
@@ -50,6 +61,7 @@ def verify_all_success():
             return False
     logger.info("Todas las tablas tienen estado '_SUCCESS'.")
     return True
+
 
 # Función para descargar tablas desde S3
 def download_tables():
@@ -65,11 +77,15 @@ def download_tables():
             logger.info(f"Descargando archivo '{s3_key}' desde S3 a '{local_path}'...")
             bucket = bucket_name
             s3_client.download_file(bucket, s3_key, local_path)
-            logger.info(f"Archivo '{table_name}' descargado exitosamente en '{local_path}'.")
-        
+            logger.info(
+                f"Archivo '{table_name}' descargado exitosamente en '{local_path}'."
+            )
+
         except Exception as e:
             logger.error(f"Error al descargar el archivo '{s3_key}' desde S3: {e}")
-            raise RuntimeError(f"Error al descargar el archivo '{s3_key}' desde S3: {e}")
+            raise RuntimeError(
+                f"Error al descargar el archivo '{s3_key}' desde S3: {e}"
+            )
 
 
 def upload_to_stage(df, file_prefix):
@@ -97,7 +113,9 @@ def upload_to_stage(df, file_prefix):
     s3_client = s3_hook.get_conn()
 
     try:
-        logger.info(f"Subiendo archivo transformado '{part_file_path}' a S3 en '{stage_key}'...")
+        logger.info(
+            f"Subiendo archivo transformado '{part_file_path}' a S3 en '{stage_key}'..."
+        )
         # Subir el archivo usando el cliente de boto3
         s3_client.upload_file(part_file_path, bucket_name, stage_key)
         logger.info(f"Archivo '{stage_key}' subido exitosamente a S3.")
@@ -108,27 +126,48 @@ def upload_to_stage(df, file_prefix):
         # Eliminar el directorio temporal
         shutil.rmtree(temp_dir)
 
+
 # Transformación del ataque
 def transform_attack():
     spark = create_spark_session("Transform Attack Data")
     # Cargar las tablas descargadas desde la capa raw
-    big_chance = spark.read.csv(f"/tmp/big_chance_team.csv", header=True, inferSchema=True)
-    clean_sheet = spark.read.csv(f"/tmp/clean_sheet_team.csv", header=True, inferSchema=True)
-    effective_clearance = spark.read.csv(f"/tmp/effective_clearance_team.csv", header=True, inferSchema=True)
-    expected_goals = spark.read.csv(f"/tmp/expected_goals_team.csv", header=True, inferSchema=True)
-    ontarget_scoring_att = spark.read.csv(f"/tmp/ontarget_scoring_att_team.csv", header=True, inferSchema=True)
-    penalty_won = spark.read.csv(f"/tmp/penalty_won_team.csv", header=True, inferSchema=True)
-    possession_won_att_3rd = spark.read.csv(f"/tmp/possession_won_att.csv", header=True, inferSchema=True)
-    team_goals_per_match = spark.read.csv(f"/tmp/team_goals_per_match.csv", header=True, inferSchema=True)
-    touches_in_opp_box = spark.read.csv(f"/tmp/touches_in_opp_box_team.csv", header=True, inferSchema=True)
-    player_expected_assists = spark.read.csv(f"/tmp/player_expected_assists.csv", header=True, inferSchema=True)
-    
+    big_chance = spark.read.csv(
+        f"/tmp/big_chance_team.csv", header=True, inferSchema=True
+    )
+    clean_sheet = spark.read.csv(
+        f"/tmp/clean_sheet_team.csv", header=True, inferSchema=True
+    )
+    effective_clearance = spark.read.csv(
+        f"/tmp/effective_clearance_team.csv", header=True, inferSchema=True
+    )
+    expected_goals = spark.read.csv(
+        f"/tmp/expected_goals_team.csv", header=True, inferSchema=True
+    )
+    ontarget_scoring_att = spark.read.csv(
+        f"/tmp/ontarget_scoring_att_team.csv", header=True, inferSchema=True
+    )
+    penalty_won = spark.read.csv(
+        f"/tmp/penalty_won_team.csv", header=True, inferSchema=True
+    )
+    possession_won_att_3rd = spark.read.csv(
+        f"/tmp/possession_won_att.csv", header=True, inferSchema=True
+    )
+    team_goals_per_match = spark.read.csv(
+        f"/tmp/team_goals_per_match.csv", header=True, inferSchema=True
+    )
+    touches_in_opp_box = spark.read.csv(
+        f"/tmp/touches_in_opp_box_team.csv", header=True, inferSchema=True
+    )
+    player_expected_assists = spark.read.csv(
+        f"/tmp/player_expected_assists.csv", header=True, inferSchema=True
+    )
+
     # Calculo de asistencias agrupadas por equipo
     assists = player_expected_assists.groupBy("Team").agg(
         sum("Actual Assists").alias("Actual Assists"),
-        sum("Expected Assists (xA)").alias("Expected Assists")
+        sum("Expected Assists (xA)").alias("Expected Assists"),
     )
-    
+
     attack_data = (
         big_chance.alias("bc")
         .join(clean_sheet.alias("cs"), col("bc.Team") == col("cs.Team"))
@@ -158,54 +197,64 @@ def transform_attack():
             col("tgpm.Matches").alias("Matches"),
             col("tiob.Touches in Opposition Box"),
             col("as.Actual Assists"),
-            col("as.Expected Assists")
+            col("as.Expected Assists"),
         )
     )
 
     # Calculo de métricas adicionales
-    attack_data = attack_data.withColumn(
-        "Goal Conversion Rate",
-        expr("`Goals per Match` / `Big Chances`")
-    ).withColumn(
-        "Clearance Efficiency",
-        expr("`Total Clearances` / `Matches`")
-    ).withColumn(
-        "Possession Effectiveness",
-        expr("`Possession Won Final 3rd per Match` / `Touches in Opposition Box`")
-    ).withColumn(
-        "Penalty Impact",
-        expr("`Penalties Won` / `Total Goals Scored`")
-    ).withColumn(
-        "Offensive Performance",
-        expr("(`Goals per Match` + `Expected Goals`) / 2")
-    ).withColumn(
-        "Assist to Goal Ratio",
-        expr("`Actual Assists` / `Total Goals Scored`")
-    ).withColumn(
-        "Shooting Efficiency",
-        expr("`Shots on Target per Match` * `Shot Conversion Rate (%)` / 100")
-    ).withColumn(
-        "Clean Sheet Impact",
-        expr("`Clean Sheets` / `Matches`")
-    ).withColumn(
-        "Chances per Possession",
-        expr("`Big Chances` / `Possession Won Final 3rd per Match`")
-    ).withColumn(
-        "Combined Attack Efficiency",
-        expr("(`Big Chances` + `Expected Goals` + `Touches in Opposition Box`) / `Matches`")
+    attack_data = (
+        attack_data.withColumn(
+            "Goal Conversion Rate", expr("`Goals per Match` / `Big Chances`")
+        )
+        .withColumn("Clearance Efficiency", expr("`Total Clearances` / `Matches`"))
+        .withColumn(
+            "Possession Effectiveness",
+            expr("`Possession Won Final 3rd per Match` / `Touches in Opposition Box`"),
+        )
+        .withColumn("Penalty Impact", expr("`Penalties Won` / `Total Goals Scored`"))
+        .withColumn(
+            "Offensive Performance", expr("(`Goals per Match` + `Expected Goals`) / 2")
+        )
+        .withColumn(
+            "Assist to Goal Ratio", expr("`Actual Assists` / `Total Goals Scored`")
+        )
+        .withColumn(
+            "Shooting Efficiency",
+            expr("`Shots on Target per Match` * `Shot Conversion Rate (%)` / 100"),
+        )
+        .withColumn("Clean Sheet Impact", expr("`Clean Sheets` / `Matches`"))
+        .withColumn(
+            "Chances per Possession",
+            expr("`Big Chances` / `Possession Won Final 3rd per Match`"),
+        )
+        .withColumn(
+            "Combined Attack Efficiency",
+            expr(
+                "(`Big Chances` + `Expected Goals` + `Touches in Opposition Box`) / `Matches`"
+            ),
+        )
     )
 
     # Subir resultado transformado a la capa `stage` en S3
     upload_to_stage(attack_data, "attack_data")
 
+
 # Transformación de la defensa
 def transform_defense():
     spark = create_spark_session("Transform Defense Data")
     # Obtener los CSV desde S3
-    expected_goals_conceded = spark.read.csv("/tmp/expected_goals_conceded_team.csv", header=True, inferSchema=True)
-    goals_conceded_per_match = spark.read.csv("/tmp/goals_conceded_team_match.csv", header=True, inferSchema=True)
-    interceptions = spark.read.csv("/tmp/interception_team.csv", header=True, inferSchema=True)
-    penalties_conceded = spark.read.csv("/tmp/penalty_conceded_team.csv", header=True, inferSchema=True)
+    expected_goals_conceded = spark.read.csv(
+        "/tmp/expected_goals_conceded_team.csv", header=True, inferSchema=True
+    )
+    goals_conceded_per_match = spark.read.csv(
+        "/tmp/goals_conceded_team_match.csv", header=True, inferSchema=True
+    )
+    interceptions = spark.read.csv(
+        "/tmp/interception_team.csv", header=True, inferSchema=True
+    )
+    penalties_conceded = spark.read.csv(
+        "/tmp/penalty_conceded_team.csv", header=True, inferSchema=True
+    )
     saves = spark.read.csv("/tmp/saves_team.csv", header=True, inferSchema=True)
     tackles = spark.read.csv("/tmp/won_tackle_team.csv", header=True, inferSchema=True)
 
@@ -230,53 +279,61 @@ def transform_defense():
             col("sav.Saves per Match"),
             col("sav.Total Saves"),
             col("tac.Successful Tackles per Match"),
-            col("tac.Tackle Success (%)")
+            col("tac.Tackle Success (%)"),
         )
     )
 
     # Calculo de métricas adicionales
-    defense_data = defense_data.withColumn(
-        "Interceptions Efficiency",
-        expr("`Total Interceptions` / `Matches`")
-    ).withColumn(
-        "Goals Conceded Efficiency",
-        expr("`Goals Conceded per Match`")
-    ).withColumn(
-        "Save Effectiveness",
-        expr("`Total Saves` / `Total Goals Conceded`")
-    ).withColumn(
-        "Penalty Average per Match",
-        expr("`Penalties Conceded` / `Matches`")
-    ).withColumn(
-        "Penalty Impact on Goals",
-        expr("`Penalty Goals Conceded` / `Total Goals Conceded`")
-    ).withColumn(
-        "Saves per Match Ratio",
-        expr("`Saves per Match` / `Matches`")
-    ).withColumn(
-        "Successful Tackles Average",
-        expr("`Successful Tackles per Match`")
-    ).withColumn(
-        "Conceded vs Interceptions Ratio",
-        expr("`Total Goals Conceded` / `Total Interceptions`")
-    ).withColumn(
-        "Goals Conceded to Saves Ratio",
-        expr("`Total Goals Conceded` / `Total Saves`")
-    ).withColumn(
-        "Interceptions per Penalty Conceded",
-        expr("`Total Interceptions` / `Penalties Conceded`")
+    defense_data = (
+        defense_data.withColumn(
+            "Interceptions Efficiency", expr("`Total Interceptions` / `Matches`")
+        )
+        .withColumn("Goals Conceded Efficiency", expr("`Goals Conceded per Match`"))
+        .withColumn(
+            "Save Effectiveness", expr("`Total Saves` / `Total Goals Conceded`")
+        )
+        .withColumn(
+            "Penalty Average per Match", expr("`Penalties Conceded` / `Matches`")
+        )
+        .withColumn(
+            "Penalty Impact on Goals",
+            expr("`Penalty Goals Conceded` / `Total Goals Conceded`"),
+        )
+        .withColumn("Saves per Match Ratio", expr("`Saves per Match` / `Matches`"))
+        .withColumn(
+            "Successful Tackles Average", expr("`Successful Tackles per Match`")
+        )
+        .withColumn(
+            "Conceded vs Interceptions Ratio",
+            expr("`Total Goals Conceded` / `Total Interceptions`"),
+        )
+        .withColumn(
+            "Goals Conceded to Saves Ratio",
+            expr("`Total Goals Conceded` / `Total Saves`"),
+        )
+        .withColumn(
+            "Interceptions per Penalty Conceded",
+            expr("`Total Interceptions` / `Penalties Conceded`"),
+        )
     )
 
     upload_to_stage(defense_data, "defense_data")
 
+
 # Transformación de la disciplina
 def transform_discipline():
-    
+
     spark = create_spark_session("Transform Discipline")
 
-    fouls_data = spark.read.csv("/tmp/fk_foul_lost_team.csv", header=True, inferSchema=True)
-    interceptions_data = spark.read.csv("/tmp/interception_team.csv", header=True, inferSchema=True)
-    cards_data = spark.read.csv("/tmp/total_yel_card_team.csv", header=True, inferSchema=True)
+    fouls_data = spark.read.csv(
+        "/tmp/fk_foul_lost_team.csv", header=True, inferSchema=True
+    )
+    interceptions_data = spark.read.csv(
+        "/tmp/interception_team.csv", header=True, inferSchema=True
+    )
+    cards_data = spark.read.csv(
+        "/tmp/total_yel_card_team.csv", header=True, inferSchema=True
+    )
 
     # Unimos los DataFrames usando la columna "Team"
     discipline_data = (
@@ -290,61 +347,70 @@ def transform_discipline():
             col("inter.Interceptions per Match"),
             col("inter.Total Interceptions"),
             col("cards.Yellow Cards"),
-            col("cards.Red Cards")
+            col("cards.Red Cards"),
         )
     )
 
     # Calculo de métricas adicionales
-    discipline_data = discipline_data.withColumn(
-        "Interceptions Efficiency",
-        expr("`Total Interceptions` / `Matches`")
-    ).withColumn(
-        "Fouls to Interceptions Ratio",
-        expr("`Fouls per Match` / `Interceptions per Match`")
-    ).withColumn(
-        "Yellow Cards per Match",
-        expr("`Yellow Cards` / `Matches`")
-    ).withColumn(
-        "Red Cards per Match",
-        expr("`Red Cards` / `Matches`")
-    ).withColumn(
-        "Fouls per Yellow Card",
-        expr("(`Fouls per Match` * `Matches`) / `Yellow Cards`")
-    ).withColumn(
-        "Interceptions per Card",
-        expr("`Total Interceptions` / (`Yellow Cards` + `Red Cards`)")
-    ).withColumn(
-        "Cards per Match",
-        expr("(`Yellow Cards` + `Red Cards`) / `Matches`")
-    ).withColumn(
-        "Yellow to Red Cards Ratio",
-        expr("`Yellow Cards` / `Red Cards`")
-    ).withColumn(
-        "Discipline Index",
-        expr("(`Yellow Cards` * 1 + `Red Cards` * 2 + `Fouls per Match` * `Matches`) / `Matches`")
-    ).withColumn(
-        "Interceptions Impact",
-        expr("`Total Interceptions` / (`Fouls per Match` * `Matches`)")
+    discipline_data = (
+        discipline_data.withColumn(
+            "Interceptions Efficiency", expr("`Total Interceptions` / `Matches`")
+        )
+        .withColumn(
+            "Fouls to Interceptions Ratio",
+            expr("`Fouls per Match` / `Interceptions per Match`"),
+        )
+        .withColumn("Yellow Cards per Match", expr("`Yellow Cards` / `Matches`"))
+        .withColumn("Red Cards per Match", expr("`Red Cards` / `Matches`"))
+        .withColumn(
+            "Fouls per Yellow Card",
+            expr("(`Fouls per Match` * `Matches`) / `Yellow Cards`"),
+        )
+        .withColumn(
+            "Interceptions per Card",
+            expr("`Total Interceptions` / (`Yellow Cards` + `Red Cards`)"),
+        )
+        .withColumn(
+            "Cards per Match", expr("(`Yellow Cards` + `Red Cards`) / `Matches`")
+        )
+        .withColumn("Yellow to Red Cards Ratio", expr("`Yellow Cards` / `Red Cards`"))
+        .withColumn(
+            "Discipline Index",
+            expr(
+                "(`Yellow Cards` * 1 + `Red Cards` * 2 + `Fouls per Match` * `Matches`) / `Matches`"
+            ),
+        )
+        .withColumn(
+            "Interceptions Impact",
+            expr("`Total Interceptions` / (`Fouls per Match` * `Matches`)"),
+        )
     )
-    
+
     upload_to_stage(discipline_data, "discipline_data")
-    
+
+
 # Crear archivo de estado `_SUCCESS` o `_ERROR` después de las transformaciones
 def create_stage_status_file():
     s3_hook = S3Hook(aws_conn_id="aws_s3_datalake_user")
     status_key_prefix = f"stage/{source}/status/year={year}/month={month}/day={day}/"
     status_file_key = f"{status_key_prefix}transform_SUCCESS"
-    
+
     # Crear archivo de estado temporal
     status_file_path = f"/tmp/{os.path.basename(status_file_key)}"
-    with open(status_file_path, 'w') as status_file:
+    with open(status_file_path, "w") as status_file:
         status_file.write("Proceso de transformación finalizado con éxito.\n")
 
     # Subir el archivo de estado a S3
     logger.info(f"Subiendo archivo de estado '{status_file_key}' a S3...")
-    s3_hook.load_file(filename=status_file_path, key=status_file_key, bucket_name=bucket_name, replace=True)
+    s3_hook.load_file(
+        filename=status_file_path,
+        key=status_file_key,
+        bucket_name=bucket_name,
+        replace=True,
+    )
     if os.path.exists(status_file_path):
         os.remove(status_file_path)
+
 
 # Definir DAG de Transformaciones
 default_args = {
@@ -364,7 +430,6 @@ with DAG(
     schedule_interval=None,
     catchup=False,
     tags=["etl", "data-pipeline", "football-analytics"],
-
 ) as dag:
 
     # Verificar que todos los estados sean `_SUCCESS`
@@ -384,7 +449,7 @@ with DAG(
     )
 
     # Crear tareas de transformación usando TaskGroup
-    with TaskGroup(group_id='transformations') as transformations_group:
+    with TaskGroup(group_id="transformations") as transformations_group:
         transform_attack_task = PythonOperator(
             task_id="transform_attack",
             python_callable=transform_attack,
@@ -398,7 +463,7 @@ with DAG(
             retries=1,
             retry_delay=timedelta(minutes=1),
         )
-        
+
         transform_defense_task = PythonOperator(
             task_id="transform_discipline",
             python_callable=transform_discipline,
@@ -413,7 +478,7 @@ with DAG(
         retries=1,
         retry_delay=timedelta(minutes=1),
     )
-    
+
     # Tarea para disparar el DAG de load
     trigger_load_dag = TriggerDagRunOperator(
         task_id="trigger_load_dag",
@@ -421,6 +486,11 @@ with DAG(
         wait_for_completion=False,  # Esperar a que el DAG finalice (opcional)
     )
 
-
     # Definir la secuencia de tareas
-    verify_status_task >> download_tables_task >> transformations_group >> create_status_file_task >> trigger_load_dag
+    (
+        verify_status_task
+        >> download_tables_task
+        >> transformations_group
+        >> create_status_file_task
+        >> trigger_load_dag
+    )

@@ -23,13 +23,15 @@ s3_config = {
 # Función para verificar si el archivo _SUCCESS existe en S3
 def verify_success_file():
     s3_hook = S3Hook(aws_conn_id="aws_s3_datalake_user")
-    
+
     # Calcular fecha actual para construir la ruta del archivo _SUCCESS
     today = datetime.now()
     year = today.strftime("%Y")
     month = today.strftime("%m")
     day = today.strftime("%d")
-    success_key = f"stage/mysql/status/year={year}/month={month}/day={day}/transform_SUCCESS"
+    success_key = (
+        f"stage/mysql/status/year={year}/month={month}/day={day}/transform_SUCCESS"
+    )
 
     if not s3_hook.check_for_key(key=success_key, bucket_name=s3_config["bucket_name"]):
         logger.error(f"El archivo de estado '{success_key}' no existe en S3.")
@@ -59,6 +61,7 @@ def download_csv_from_s3(s3_file: str) -> str:
         logger.error(f"Error al descargar el archivo '{s3_key}' desde S3: {e}")
         return None
 
+
 # Función para crear una conexión SQLAlchemy a partir de MySqlHook
 def create_sqlalchemy_engine():
     mysql_hook = MySqlHook(mysql_conn_id="mysql_database_bets")
@@ -68,6 +71,7 @@ def create_sqlalchemy_engine():
     connection_string = f"mysql+pymysql://{connection_details.login}:{connection_details.password}@{connection_details.host}:{connection_details.port}/{connection_details.schema}"
     logger.info(f"Conexión SQLAlchemy creada exitosamente.")
     return create_engine(connection_string)
+
 
 # Función para guardar un archivo CSV desde S3 en una tabla de MySQL
 def save_csv_from_s3_to_mysql(s3_file: str, table_name: str):
@@ -89,7 +93,9 @@ def save_csv_from_s3_to_mysql(s3_file: str, table_name: str):
     engine = create_sqlalchemy_engine()
     try:
         df.to_sql(name=table_name, con=engine, if_exists="replace", index=False)
-        logger.info(f"Datos guardados exitosamente en la tabla '{table_name}' de MySQL.")
+        logger.info(
+            f"Datos guardados exitosamente en la tabla '{table_name}' de MySQL."
+        )
     except Exception as e:
         logger.error(f"Error al guardar datos en MySQL: {e}")
     finally:
@@ -98,6 +104,8 @@ def save_csv_from_s3_to_mysql(s3_file: str, table_name: str):
     # Eliminar el archivo temporal
     os.remove(temp_file)
     logger.info(f"Archivo temporal '{temp_file}' eliminado.")
+
+
 # Definir el DAG
 default_args = {
     "owner": "airflow",
